@@ -244,16 +244,11 @@ One warm sentence gently suggesting professional support if these feelings persi
 
     try{
       const res=await fetch("https://api.anthropic.com/v1/messages",{
-  method:"POST",headers:{
-    "Content-Type":"application/json",
-    "x-api-key": process.env.REACT_APP_ANTHROPIC_KEY,
-    "anthropic-version": "2023-06-01",
-    "anthropic-dangerous-direct-browser-access": "true"
-  },
+        method:"POST",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1400,messages:[{role:"user",content:prompt}]})
       });
       const d=await res.json();
-      const txt=d.content.map(i=>i.text||"").join("\n");
+      const txt=d.candidates?.[0]?.content?.parts?.[0]?.text||"";
       const parsed=parseAI(txt,isZh);
       setAi(parsed);
       const newSession={
