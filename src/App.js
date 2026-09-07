@@ -33,91 +33,90 @@ const MOOD = {
   heavy: { bg:"#130a22", border:"#4a2a6a", dot:"#8a58aa", text:"#b890d4", label:"🌑 Heavier", labelZh:"🌑 沉重" },
 };
 
-// Pattern detection — maps card combos to psychological themes
 const PATTERNS = {
-  burnout:    { ids:[1,8,14,15,6],  en:"Burnout / Depletion",         zh:"身心耗竭／倦怠"     },
-  anxiety:    { ids:[3,8,16,20,9],  en:"Anxiety / Overwhelm",         zh:"焦慮／不知所措"     },
-  lowmood:    { ids:[4,7,15,6,19],  en:"Low Mood / Withdrawal",       zh:"情緒低落／退縮"     },
-  anger:      { ids:[5,20,14,17],   en:"Suppressed Anger / Tension",  zh:"壓抑憤怒／內在張力" },
-  grief:      { ids:[4,18,19,7,2],  en:"Grief / Longing",             zh:"悲傷／失落渴望"     },
-  growth:     { ids:[10,12,21,22,11],en:"Growth / Wellbeing",         zh:"成長／正向狀態"     },
+  burnout:    { ids:[1,8,14,15,6],  en:"Burnout / Depletion",          zh:"身心耗竭／倦怠"     },
+  anxiety:    { ids:[3,8,16,20,9],  en:"Anxiety / Overwhelm",          zh:"焦慮／不知所措"     },
+  lowmood:    { ids:[4,7,15,6,19],  en:"Low Mood / Withdrawal",        zh:"情緒低落／退縮"     },
+  anger:      { ids:[5,20,14,17],   en:"Suppressed Anger / Tension",   zh:"壓抑憤怒／內在張力" },
+  grief:      { ids:[4,18,19,7,2],  en:"Grief / Longing",              zh:"悲傷／失落渴望"     },
+  growth:     { ids:[10,12,21,22,11],en:"Growth / Wellbeing",          zh:"成長／正向狀態"     },
   transition: { ids:[2,9,14,18,20], en:"Life Transition / Uncertainty",zh:"人生轉變／不確定感" },
 };
 
-function detectPattern(cards) {
-  const ids = new Set(cards.map(c=>c.id));
-  let best = null, bestScore = 0;
+function detectPattern(cards){
+  const ids=new Set(cards.map(c=>c.id));
+  let best=null,bestScore=0;
   Object.entries(PATTERNS).forEach(([key,p])=>{
-    const score = p.ids.filter(id=>ids.has(id)).length;
-    if(score>bestScore){ bestScore=score; best=key; }
+    const score=p.ids.filter(id=>ids.has(id)).length;
+    if(score>bestScore){bestScore=score;best=key;}
   });
-  return bestScore>0 ? best : null;
+  return bestScore>0?best:null;
 }
 
-const T = {
+const T={
   en:{
-    appName:"Inner Mirror", appSub:"A gentle space for self-reflection",
-    welcome1:"This is your space.", welcome2:"Pick 3 cards, express your feelings,",
+    appName:"Inner Mirror",appSub:"A gentle space for self-reflection",
+    welcome1:"This is your space.",welcome2:"Pick 3 cards, express your feelings,",
     welcome3:"and let AI gently guide your reflection.",
-    begin:"Begin Session", myJourney:"My Journey", switchLang:"切換至繁體中文",
-    s1Title:"Choose Your Cards", s1Desc:"Select 3 cards that resonate with how you feel right now. No right or wrong answers.",
-    selected:"selected", limitMsg:"Tap a selected card to deselect it.", next:"Continue →",
-    s2Title:"Express Yourself", s2Desc:"Anything you'd like to share about how you feel? Optional.",
+    begin:"Begin Session",myJourney:"My Journey",switchLang:"切換至繁體中文",
+    s1Title:"Choose Your Cards",s1Desc:"Select 3 cards that resonate with how you feel right now. No right or wrong answers.",
+    selected:"selected",limitMsg:"Tap a selected card to deselect it.",next:"Continue →",
+    s2Title:"Express Yourself",s2Desc:"Anything you'd like to share about how you feel? Optional.",
     placeholder:"Write freely here… there is no judgement.",
-    reflect:"Reflect on My Cards", skip:"Skip & Continue", back:"← Back",
-    s3Title:"Your Reflection", thinking:"Reading your cards with care…",
-    sReflection:"Reflection", sInsight:"Insight", sSuggestions:"Self-care steps",
-    sAwareness:"Gentle Awareness", sTechniques:"Evidence-based Techniques", sNote:"A gentle reminder",
-    savedMsg:"✨ Session saved to your journey", viewJourney:"View My Journey",
-    again:"Begin a New Session", error:"Unable to connect. Please try again.",
+    reflect:"Reflect on My Cards",skip:"Skip & Continue",back:"← Back",
+    s3Title:"Your Reflection",thinking:"Reading your cards with care…",
+    sReflection:"Reflection",sInsight:"Insight",sSuggestions:"Self-care steps",
+    sAwareness:"Gentle Awareness",sTechniques:"Evidence-based Techniques",sNote:"A gentle reminder",
+    savedMsg:"✨ Session saved to your journey",viewJourney:"View My Journey",
+    again:"Begin a New Session",error:"Unable to connect. Please try again.",
     disclaimer:"內觀 is a wellness tool, not a diagnostic or clinical service. If you are in crisis, please contact a mental health professional.",
-    hTitle:"My Journey", hBack:"← Back",
-    hSessions:"Sessions", hDays:"Days Active", hMostChosen:"Most Chosen Cards",
-    hTimeline:"Mood Timeline", hHistory:"Session History",
+    hTitle:"My Journey",hBack:"← Back",
+    hSessions:"Sessions",hDays:"Days Active",hMostChosen:"Most Chosen Cards",
+    hTimeline:"Mood Timeline",hHistory:"Session History",
     hNoSessions:"No sessions yet. Begin your first session to start your journey.",
-    hClear:"Clear all history", hConfirmClear:"Clear all session history? This cannot be undone.",
-    hExpand:"Tap any session to read its reflection.", hReflection:"AI reflection from that day:",
+    hClear:"Clear all history",hConfirmClear:"Clear all session history? This cannot be undone.",
+    hExpand:"Tap any session to read its reflection.",hReflection:"AI reflection from that day:",
     patternLabel:"Emotional pattern detected:",
   },
   zh:{
-    appName:"內觀", appSub:"一個溫柔的自我反思空間",
-    welcome1:"這是屬於你的空間。", welcome2:"選擇3張牌，表達你的感受，",
+    appName:"內觀",appSub:"一個溫柔的自我反思空間",
+    welcome1:"這是屬於你的空間。",welcome2:"選擇3張牌，表達你的感受，",
     welcome3:"讓AI溫柔地陪你自我反思。",
-    begin:"開始體驗", myJourney:"我的旅程", switchLang:"Switch to English",
-    s1Title:"選擇你的牌", s1Desc:"選擇3張此刻最能觸動你的牌。沒有對錯之分，跟隨直覺。",
-    selected:"已選", limitMsg:"點選已選的牌可取消選擇。", next:"繼續 →",
-    s2Title:"表達你的感受", s2Desc:"你想分享此刻的感受嗎？在這裡自由書寫，完全可以略過。",
+    begin:"開始體驗",myJourney:"我的旅程",switchLang:"Switch to English",
+    s1Title:"選擇你的牌",s1Desc:"選擇3張此刻最能觸動你的牌。沒有對錯之分，跟隨直覺。",
+    selected:"已選",limitMsg:"點選已選的牌可取消選擇。",next:"繼續 →",
+    s2Title:"表達你的感受",s2Desc:"你想分享此刻的感受嗎？在這裡自由書寫，完全可以略過。",
     placeholder:"在這裡自由書寫……這裡沒有評判。",
-    reflect:"解讀我的牌", skip:"略過，繼續", back:"← 返回",
-    s3Title:"你的領悟", thinking:"正在細讀你的牌……",
-    sReflection:"情感反思", sInsight:"心理洞察", sSuggestions:"自我關懷建議",
-    sAwareness:"溫柔覺察", sTechniques:"實證自助技巧", sNote:"溫柔提醒",
-    savedMsg:"✨ 本次體驗已儲存至旅程", viewJourney:"查看我的旅程",
-    again:"開始新一輪", error:"無法連接，請稍後再試。",
+    reflect:"解讀我的牌",skip:"略過，繼續",back:"← 返回",
+    s3Title:"你的領悟",thinking:"正在細讀你的牌……",
+    sReflection:"情感反思",sInsight:"心理洞察",sSuggestions:"自我關懷建議",
+    sAwareness:"溫柔覺察",sTechniques:"實證自助技巧",sNote:"溫柔提醒",
+    savedMsg:"✨ 本次體驗已儲存至旅程",viewJourney:"查看我的旅程",
+    again:"開始新一輪",error:"無法連接，請稍後再試。",
     disclaimer:"內觀是健康自助工具，並非診斷或臨床服務。如你正處於危機中，請聯絡心理健康專業人士。",
-    hTitle:"我的旅程", hBack:"← 返回",
-    hSessions:"次體驗", hDays:"活躍天數", hMostChosen:"最常選擇的牌",
-    hTimeline:"情緒時間軸", hHistory:"體驗記錄",
+    hTitle:"我的旅程",hBack:"← 返回",
+    hSessions:"次體驗",hDays:"活躍天數",hMostChosen:"最常選擇的牌",
+    hTimeline:"情緒時間軸",hHistory:"體驗記錄",
     hNoSessions:"尚無記錄。開始你的第一次體驗吧。",
-    hClear:"清除所有記錄", hConfirmClear:"確定清除所有記錄？此操作無法復原。",
-    hExpand:"點選任何記錄，閱讀當日的AI領悟。", hReflection:"當日AI領悟：",
+    hClear:"清除所有記錄",hConfirmClear:"確定清除所有記錄？此操作無法復原。",
+    hExpand:"點選任何記錄，閱讀當日的AI領悟。",hReflection:"當日AI領悟：",
     patternLabel:"偵測到的情緒模式：",
   }
 };
 
-const STORAGE_KEY = "neiGuan_v2";
-async function loadSessions(){ try{ const r=await window.storage.get(STORAGE_KEY); return r?JSON.parse(r.value):[]; }catch{ return []; } }
-async function saveSessions(list){ try{ await window.storage.set(STORAGE_KEY,JSON.stringify(list)); }catch{} }
-function getMoodType(cards){ const p=cards.filter(c=>POSITIVE_IDS.has(c.id)).length; return p>=2?"bright":p===1?"mixed":"heavy"; }
-function formatDate(iso,lang){ const d=new Date(iso); if(lang==="zh") return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; return d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}); }
-function getTopCards(sessions){ const freq={}; sessions.forEach(s=>s.cards.forEach(c=>{ if(!freq[c.id]) freq[c.id]={card:c,count:0}; freq[c.id].count++; })); return Object.values(freq).sort((a,b)=>b.count-a.count).slice(0,5); }
-function getDaysActive(sessions){ return new Set(sessions.map(s=>s.date.split("T")[0])).size; }
+const STORAGE_KEY="neiGuan_v2";
+async function loadSessions(){try{const r=await window.storage.get(STORAGE_KEY);return r?JSON.parse(r.value):[];}catch{return[];}}
+async function saveSessions(list){try{await window.storage.set(STORAGE_KEY,JSON.stringify(list));}catch{}}
+function getMoodType(cards){const p=cards.filter(c=>POSITIVE_IDS.has(c.id)).length;return p>=2?"bright":p===1?"mixed":"heavy";}
+function formatDate(iso,lang){const d=new Date(iso);if(lang==="zh")return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;return d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
+function getTopCards(sessions){const freq={};sessions.forEach(s=>s.cards.forEach(c=>{if(!freq[c.id])freq[c.id]={card:c,count:0};freq[c.id].count++;}));return Object.values(freq).sort((a,b)=>b.count-a.count).slice(0,5);}
+function getDaysActive(sessions){return new Set(sessions.map(s=>s.date.split("T")[0])).size;}
 
 function parseAI(text,isZh){
-  const get=(a,b)=>{ const m=text.match(new RegExp(`\\[${a}\\]([\\s\\S]*?)(?=\\[${b}\\]|$)`)); return m?m[1].trim():""; };
+  const get=(a,b)=>{const m=text.match(new RegExp(`\\[${a}\\]([\\s\\S]*?)(?=\\[${b}\\]|$)`));return m?m[1].trim():"";};
   return isZh
-    ?{ reflection:get("反思","洞察"), insight:get("洞察","覺察"), awareness:get("覺察","技巧"), techniques:get("技巧","提示"), note:text.split("[提示]")[1]?.trim()||"" }
-    :{ reflection:get("REFLECTION","INSIGHT"), insight:get("INSIGHT","AWARENESS"), awareness:get("AWARENESS","TECHNIQUES"), techniques:get("TECHNIQUES","NOTE"), note:text.split("[NOTE]")[1]?.trim()||"" };
+    ?{reflection:get("反思","洞察"),insight:get("洞察","覺察"),awareness:get("覺察","技巧"),techniques:get("技巧","提示"),note:text.split("[提示]")[1]?.trim()||""}
+    :{reflection:get("REFLECTION","INSIGHT"),insight:get("INSIGHT","AWARENESS"),awareness:get("AWARENESS","TECHNIQUES"),techniques:get("TECHNIQUES","NOTE"),note:text.split("[NOTE]")[1]?.trim()||""};
 }
 
 const S={
@@ -183,90 +182,68 @@ export default function App(){
   const [expanded,setExpanded]=useState(null);
   const [pattern,setPattern]=useState(null);
 
-  useEffect(()=>{ loadSessions().then(setSessions); },[]);
+  useEffect(()=>{loadSessions().then(setSessions);},[]);
 
   const t=lang?T[lang]:T.en;
   const isZh=lang==="zh";
 
   const toggleCard=c=>{
-    if(selected.find(x=>x.id===c.id)) setSelected(selected.filter(x=>x.id!==c.id));
-    else if(selected.length<3) setSelected([...selected,c]);
+    if(selected.find(x=>x.id===c.id))setSelected(selected.filter(x=>x.id!==c.id));
+    else if(selected.length<3)setSelected([...selected,c]);
   };
 
   const callAI=async()=>{
-    setLoading(true); setErr(""); setSaved(false);
+    setLoading(true);setErr("");setSaved(false);
     const names=selected.map(c=>isZh?c.zh:c.en).join("、");
     const detectedPattern=detectPattern(selected);
     setPattern(detectedPattern);
-    const patternHint = detectedPattern && PATTERNS[detectedPattern]
-      ? isZh ? PATTERNS[detectedPattern].zh : PATTERNS[detectedPattern].en
-      : "";
+    const patternHint=detectedPattern&&PATTERNS[detectedPattern]
+      ?isZh?PATTERNS[detectedPattern].zh:PATTERNS[detectedPattern].en:"";
 
     const prompt=isZh
       ?`你是一位溫柔、富有同理心的心理健康伴侶，具備專業心理學知識。
 用戶選擇了：${names}。${patternHint?`這些牌可能反映：${patternHint}。`:""}${expr?`他們分享：「${expr}」`:""}
-
 請以繁體中文回應，嚴格按照以下格式：
-
-[反思]
-以溫暖、非評判的方式承認感受（2-3句）
-
-[洞察]
-輕柔說明這些情緒組合可能反映的心理狀態與模式（2-3句）
-
-[覺察]
-以非診斷、溫柔的語言，說明這些感受有時與哪些心理狀況相關（如壓力、倦怠、焦慮等），並讓用戶知道這很常見、不孤單（2-3句）
-
-[技巧]
-3個具體的實證自助技巧（如CBT認知重塑、正念呼吸、行為活化、書寫療癒等），每項包含名稱與簡短說明，數字列出
-
-[提示]
-如感受持續，溫柔建議尋求專業支持（1句）`
+[反思] 以溫暖、非評判的方式承認感受（2-3句）
+[洞察] 輕柔說明這些情緒組合可能反映的心理狀態與模式（2-3句）
+[覺察] 以非診斷、溫柔的語言，說明這些感受有時與哪些心理狀況相關，並讓用戶知道這很常見（2-3句）
+[技巧] 3個具體的實證自助技巧，每項包含名稱與簡短說明，數字列出
+[提示] 如感受持續，溫柔建議尋求專業支持（1句）`
       :`You are a warm, empathetic mental wellness companion with professional psychology knowledge.
 Cards chosen: ${names}. ${patternHint?`These may reflect: ${patternHint}.`:""} ${expr?`They shared: "${expr}"`:""}
-
 Respond in this EXACT format:
-
-[REFLECTION]
-Acknowledge feelings warmly and without judgement (2–3 sentences)
-
-[INSIGHT]
-Gently explain what this emotional combination might reflect psychologically (2–3 sentences)
-
-[AWARENESS]
-In gentle, non-diagnostic language, explain what experiences or states these feelings are sometimes associated with (e.g. burnout, anxiety, grief, life transitions). Normalise it — remind them they are not alone (2–3 sentences)
-
-[TECHNIQUES]
-3 specific evidence-based self-help techniques (e.g. CBT reframing, box breathing, behavioural activation, journaling prompts, grounding). Include a technique name and brief how-to for each, numbered
-
-[NOTE]
-One warm sentence gently suggesting professional support if these feelings persist`;
+[REFLECTION] Acknowledge feelings warmly and without judgement (2-3 sentences)
+[INSIGHT] Gently explain what this emotional combination might reflect psychologically (2-3 sentences)
+[AWARENESS] In gentle, non-diagnostic language, explain what these feelings are sometimes associated with. Normalise it (2-3 sentences)
+[TECHNIQUES] 3 specific evidence-based self-help techniques with name and brief how-to, numbered
+[NOTE] One warm sentence gently suggesting professional support if these feelings persist`;
 
     try{
-      const res=await fetch("https://api.anthropic.com/v1/messages",{
+      const geminiKey=process.env.REACT_APP_GEMINI_KEY;
+      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,{
         method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1400,messages:[{role:"user",content:prompt}]})
+        body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1400}})
       });
       const d=await res.json();
       const txt=d.candidates?.[0]?.content?.parts?.[0]?.text||"";
       const parsed=parseAI(txt,isZh);
       setAi(parsed);
       const newSession={
-        id:Date.now().toString(), date:new Date().toISOString(),
-        lang, cards:selected, expression:expr,
-        reflection:parsed.reflection, moodType:getMoodType(selected),
+        id:Date.now().toString(),date:new Date().toISOString(),
+        lang,cards:selected,expression:expr,
+        reflection:parsed.reflection,moodType:getMoodType(selected),
         pattern:detectedPattern,
       };
       const updated=[newSession,...sessions].slice(0,100);
-      setSessions(updated); saveSessions(updated); setSaved(true);
-    }catch{ setErr(t.error); }
+      setSessions(updated);saveSessions(updated);setSaved(true);
+    }catch{setErr(t.error);}
     setLoading(false);
   };
 
-  const reset=()=>{ setScreen("welcome"); setSelected([]); setExpr(""); setAi(null); setErr(""); setSaved(false); setPattern(null); };
+  const reset=()=>{setScreen("welcome");setSelected([]);setExpr("");setAi(null);setErr("");setSaved(false);setPattern(null);};
   const dot=(i,active)=>active.includes(i)?"#c8aaff":"#2d1870";
 
-  if(screen==="lang") return(
+  if(screen==="lang")return(
     <div style={S.wrap}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} button:hover{opacity:.85}`}</style>
       <div style={S.center}>
@@ -284,7 +261,7 @@ One warm sentence gently suggesting professional support if these feelings persi
     </div>
   );
 
-  if(screen==="welcome") return(
+  if(screen==="welcome")return(
     <div style={S.wrap}>
       <div style={S.center}>
         <div style={S.logo}>🪞</div>
@@ -303,7 +280,7 @@ One warm sentence gently suggesting professional support if these feelings persi
     </div>
   );
 
-  if(screen==="cards") return(
+  if(screen==="cards")return(
     <div style={S.wrap}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <div style={S.stepWrap}>
@@ -339,7 +316,7 @@ One warm sentence gently suggesting professional support if these feelings persi
     </div>
   );
 
-  if(screen==="express") return(
+  if(screen==="express")return(
     <div style={S.wrap}>
       <div style={S.stepWrap}>
         <div style={S.stepHeader}>
@@ -365,7 +342,7 @@ One warm sentence gently suggesting professional support if these feelings persi
     </div>
   );
 
-  if(screen==="result") return(
+  if(screen==="result")return(
     <div style={S.wrap}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <div style={S.stepWrap}>
@@ -380,14 +357,11 @@ One warm sentence gently suggesting professional support if these feelings persi
           </div>
           {pattern&&PATTERNS[pattern]&&(
             <div style={{display:"flex",justifyContent:"center"}}>
-              <div style={S.patternBadge}>
-                🔮 {t.patternLabel} {isZh?PATTERNS[pattern].zh:PATTERNS[pattern].en}
-              </div>
+              <div style={S.patternBadge}>🔮 {t.patternLabel} {isZh?PATTERNS[pattern].zh:PATTERNS[pattern].en}</div>
             </div>
           )}
           <h2 style={S.stepTitle}>{t.s3Title}</h2>
         </div>
-
         {loading&&(
           <div style={{textAlign:"center",padding:"32px 0"}}>
             <span style={S.spinner}>🌀</span>
@@ -395,40 +369,33 @@ One warm sentence gently suggesting professional support if these feelings persi
           </div>
         )}
         {err&&<p style={S.errMsg}>{err}</p>}
-
         {ai&&!loading&&(<>
           {saved&&<p style={S.savedMsg}>{t.savedMsg}</p>}
-
           <div style={S.rCard}>
             <span style={S.rIcon}>🌿</span>
             <div style={S.rLabel}>{t.sReflection}</div>
             <p style={S.rText}>{ai.reflection}</p>
           </div>
-
           <div style={S.rCard}>
             <span style={S.rIcon}>🔍</span>
             <div style={S.rLabel}>{t.sInsight}</div>
             <p style={S.rText}>{ai.insight}</p>
           </div>
-
           <div style={S.awarenessCard}>
             <span style={S.rIcon}>💙</span>
             <div style={{...S.rLabel,color:"#7ab8f5"}}>{t.sAwareness}</div>
             <p style={{...S.rText,color:"#a8ccf0"}}>{ai.awareness}</p>
           </div>
-
           <div style={S.techniquesCard}>
             <span style={S.rIcon}>🌿</span>
             <div style={{...S.rLabel,color:"#6fcca0"}}>{t.sTechniques}</div>
             <p style={{...S.rText,color:"#a8e4c8"}}>{ai.techniques}</p>
           </div>
-
           <div style={{...S.rCard,...S.noteCard}}>
             <span style={S.rIcon}>💛</span>
             <div style={{...S.rLabel,color:"#6fcca0"}}>{t.sNote}</div>
             <p style={{...S.rText,fontStyle:"italic",color:"#a8e4c8"}}>{ai.note}</p>
           </div>
-
           <p style={S.disclaimer}>{t.disclaimer}</p>
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,marginTop:16}}>
             <button style={S.primaryBtn} onClick={reset}>{t.again}</button>
@@ -543,7 +510,7 @@ One warm sentence gently suggesting professional support if these feelings persi
             })}
             <div style={{textAlign:"center",marginTop:20}}>
               <button style={{...S.ghostBtn,color:"#4a2a4a",fontSize:12}}
-                onClick={async()=>{ if(window.confirm(t.hConfirmClear)){ await saveSessions([]); setSessions([]); } }}>
+                onClick={async()=>{if(window.confirm(t.hConfirmClear)){await saveSessions([]);setSessions([]);}}}>
                 {t.hClear}
               </button>
             </div>
