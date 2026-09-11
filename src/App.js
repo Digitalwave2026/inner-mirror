@@ -112,43 +112,6 @@ function formatDate(iso,lang){const d=new Date(iso);if(lang==="zh")return `${d.g
 function getTopCards(sessions){const freq={};sessions.forEach(s=>s.cards.forEach(c=>{if(!freq[c.id])freq[c.id]={card:c,count:0};freq[c.id].count++;}));return Object.values(freq).sort((a,b)=>b.count-a.count).slice(0,5);}
 function getDaysActive(sessions){return new Set(sessions.map(s=>s.date.split("T")[0])).size;}
 
-// ── Robust parser that handles Gemini's varied formatting ──
-function parseAI(text, isZh){
-  // Strip markdown bold/headers that Gemini sometimes adds
-  const clean = text.replace(/\*\*/g,"").replace(/##/g,"").replace(/\n{3,}/g,"\n\n");
-
-  const extractSection = (tags, nextTags) => {
-    for(const tag of tags){
-      // Try bracket format: [TAG] or [TAG]:
-      const pattern = new RegExp(`\\[${tag}\\]:?\\s*([\\s\\S]*?)(?=${nextTags.map(t=>`\\[${t}\\]`).join("|")}|$)`, "i");
-      const m = clean.match(pattern);
-      if(m && m[1].trim()) return m[1].trim();
-      // Try plain format: TAG: or TAG\n
-      const pattern2 = new RegExp(`(?:^|\\n)${tag}:?\\s*\\n([\\s\\S]*?)(?=${nextTags.map(t=>`(?:^|\\n)${t}`).join("|")}|$)`, "im");
-      const m2 = clean.match(pattern2);
-      if(m2 && m2[1].trim()) return m2[1].trim();
-    }
-    return "";
-  };
-
-  if(isZh){
-    return {
-      reflection: extractSection(["反思"],["洞察","覺察","技巧","提示"]),
-      insight:    extractSection(["洞察"],["覺察","技巧","提示"]),
-      awareness:  extractSection(["覺察"],["技巧","提示"]),
-      techniques: extractSection(["技巧"],["提示"]),
-      note:       extractSection(["提示"],[]),
-    };
-  }
-  return {
-    reflection: extractSection(["REFLECTION"],["INSIGHT","AWARENESS","TECHNIQUES","NOTE"]),
-    insight:    extractSection(["INSIGHT"],["AWARENESS","TECHNIQUES","NOTE"]),
-    awareness:  extractSection(["AWARENESS"],["TECHNIQUES","NOTE"]),
-    techniques: extractSection(["TECHNIQUES"],["NOTE"]),
-    note:       extractSection(["NOTE"],[]),
-  };
-}
-
 const S={
   wrap:{minHeight:"100vh",background:"linear-gradient(160deg,#0d0825 0%,#160d3a 60%,#0a1a2e 100%)",color:"#e2d4f8",fontFamily:"'Segoe UI','PingFang TC','Helvetica Neue',sans-serif",padding:"24px 16px",boxSizing:"border-box"},
   center:{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"90vh",textAlign:"center",maxWidth:440,margin:"0 auto"},
@@ -231,29 +194,66 @@ export default function App(){
       ?isZh?PATTERNS[detectedPattern].zh:PATTERNS[detectedPattern].en:"";
 
     const prompt=isZh
-      ?`你是一位溫柔、富有同理心的心理健康伴侶。用戶選擇了：${names}。${patternHint?`情緒模式：${patternHint}。`:""}${expr?`他們分享：「${expr}」`:""}
+      ?`你是一位溫柔的心理健康伴侶。用戶選擇了：${names}。${patternHint?`情緒模式：${patternHint}。`:""}${expr?`他們分享：「${expr}」`:""}
 
-請只回傳一個JSON物件，不要有任何其他文字、不要有markdown格式、不要有\`\`\`符號。格式如下：
-{"reflection":"以溫暖非評判方式承認感受2-3句","insight":"輕柔說明情緒模式2-3句","awareness":"說明這些感受有時與哪些狀況相關讓用戶知道這很常見2-3句","techniques":"1. 技巧名稱：說明\n2. 技巧名稱：說明\n3. 技巧名稱：說明","note":"如感受持續溫柔建議尋求專業支持1句"}`
-      :`You are a warm, empathetic mental wellness companion. Cards chosen: ${names}. ${patternHint?`Emotional pattern: ${patternHint}.`:""} ${expr?`They shared: "${expr}"`:""}
+請以繁體中文，嚴格只回傳以下JSON格式，不加任何其他文字：
+{
+"reflection": "以溫暖非評判方式承認感受，2-3句",
+"insight": "輕柔說明情緒模式心理意義，2-3句",
+"awareness": "說明這些感受常見的相關狀況，讓用戶知道不孤單，2-3句",
+"techniques": "1. 技巧名稱：具體說明\n2. 技巧名稱：具體說明\n3. 技巧名稱：具體說明",
+"note": "如感受持續，溫柔建議尋求專業支持，1句"
+}`
+      :`You are a warm mental wellness companion. Cards: ${names}. ${patternHint?`Pattern: ${patternHint}.`:""} ${expr?`Shared: "${expr}"`:""}
 
-Return ONLY a valid JSON object with no extra text, no markdown, no backticks:
-{"reflection":"Acknowledge feelings warmly 2-3 sentences","insight":"Gently explain psychological patterns 2-3 sentences","awareness":"Explain what these feelings are sometimes associated with, normalise it 2-3 sentences","techniques":"1. Technique name: how-to\n2. Technique name: how-to\n3. Technique name: how-to","note":"One warm sentence suggesting professional support if needed"}`;
+Respond ONLY with this exact JSON, no other text:
+{
+"reflection": "Acknowledge feelings warmly, 2-3 sentences",
+"insight": "Gently explain psychological meaning of these patterns, 2-3 sentences",
+"awareness": "Explain what these feelings are sometimes associated with, normalise it, 2-3 sentences",
+"techniques": "1. Technique name: how-to description\n2. Technique name: how-to description\n3. Technique name: how-to description",
+"note": "One warm sentence suggesting professional support if needed"
+}`;
 
     try{
-      const geminiKey=process.env.REACT_APP_GEMINI_KEY;
-      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          contents:[{parts:[{text:prompt}]}],
-          generationConfig:{maxOutputTokens:1400,temperature:0.7,responseMimeType:"application/json"}
-        })
-      });
+      const key=process.env.REACT_APP_GEMINI_KEY;
+      const res=await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
+        {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({
+            contents:[{parts:[{text:prompt}]}],
+            generationConfig:{maxOutputTokens:1400,temperature:0.7}
+          })
+        }
+      );
       const d=await res.json();
-      const txt=d.candidates?.[0]?.content?.parts?.[0]?.text||"{}";
-      // Clean any stray markdown backticks Gemini might add
-      const cleaned=txt.replace(/```json|```/g,"").trim();
-      const parsed=JSON.parse(cleaned);
+
+      // Check for API-level errors
+      if(d.error){throw new Error(d.error.message||"API error");}
+
+      const rawTxt=d.candidates?.[0]?.content?.parts?.[0]?.text||"";
+
+      // Try to extract JSON — handle cases where Gemini wraps in markdown
+      let parsed={reflection:"",insight:"",awareness:"",techniques:"",note:""};
+      try{
+        // Remove markdown code fences if present
+        const jsonStr=rawTxt.replace(/```json\s*/gi,"").replace(/```\s*/g,"").trim();
+        // Find the first { and last } to extract JSON
+        const start=jsonStr.indexOf("{");
+        const end=jsonStr.lastIndexOf("}");
+        if(start!==-1&&end!==-1){
+          parsed=JSON.parse(jsonStr.slice(start,end+1));
+        }
+      }catch(parseErr){
+        // Final fallback: show raw text in reflection
+        parsed={
+          reflection:rawTxt||"Unable to parse response.",
+          insight:"",awareness:"",techniques:"",note:""
+        };
+      }
+
       setAi(parsed);
       const newSession={
         id:Date.now().toString(),date:new Date().toISOString(),
@@ -263,7 +263,10 @@ Return ONLY a valid JSON object with no extra text, no markdown, no backticks:
       };
       const updated=[newSession,...sessions].slice(0,100);
       setSessions(updated);saveSessions(updated);setSaved(true);
-    }catch(e){setErr(t.error);}
+    }catch(e){
+      console.error("Gemini error:",e);
+      setErr(t.error);
+    }
     setLoading(false);
   };
 
