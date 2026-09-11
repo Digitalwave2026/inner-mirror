@@ -263,10 +263,11 @@ Respond ONLY with this exact JSON, no other text:
       };
       const updated=[newSession,...sessions].slice(0,100);
       setSessions(updated);saveSessions(updated);setSaved(true);
-    }catch(e){
-      console.error("Gemini error:",e);
-      setErr("Error: " + (e.message || JSON.stringify(e)));
-    }
+// Debug: show raw response
+if(!parsed.reflection){
+  parsed.reflection = rawTxt; // Show raw text so we can see what Gemini returns
+}
+setAi(parsed);
     setLoading(false);
   };
 
