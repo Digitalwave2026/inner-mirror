@@ -218,7 +218,7 @@ Respond ONLY with this exact JSON, no other text:
     try{
       const key=process.env.REACT_APP_GEMINI_KEY;
       const res=await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${key}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
         {
           method:"POST",
           headers:{"Content-Type":"application/json"},
@@ -238,20 +238,33 @@ Respond ONLY with this exact JSON, no other text:
       // Try to extract JSON — handle cases where Gemini wraps in markdown
       let parsed={reflection:"",insight:"",awareness:"",techniques:"",note:""};
       try{
-        // Remove markdown code fences if present
         const jsonStr=rawTxt.replace(/```json\s*/gi,"").replace(/```\s*/g,"").trim();
-        // Find the first { and last } to extract JSON
         const start=jsonStr.indexOf("{");
         const end=jsonStr.lastIndexOf("}");
         if(start!==-1&&end!==-1){
-          parsed=JSON.parse(jsonStr.slice(start,end+1));
+          const attempt=JSON.parse(jsonStr.slice(start,end+1));
+          // Only use if fields actually have content
+          if(attempt.reflection&&attempt.reflection.length>10){
+            parsed=attempt;
+          } else {
+            throw new Error("Empty fields");
+          }
+        } else {
+          throw new Error("No JSON found");
         }
       }catch(parseErr){
-        // Final fallback: show raw text in reflection
+        // Smart fallback: split raw text into sections
+        const lines=rawTxt.split("\n").filter(l=>l.trim().length>0);
+        const total=lines.length;
         parsed={
-          reflection:rawTxt||"Unable to parse response.",
-          insight:"",awareness:"",techniques:"",note:""
+          reflection: lines.slice(0, Math.ceil(total*0.2)).join("\n"),
+          insight:    lines.slice(Math.ceil(total*0.2), Math.ceil(total*0.4)).join("\n"),
+          awareness:  lines.slice(Math.ceil(total*0.4), Math.ceil(total*0.6)).join("\n"),
+          techniques: lines.slice(Math.ceil(total*0.6), Math.ceil(total*0.85)).join("\n"),
+          note:       lines.slice(Math.ceil(total*0.85)).join("\n"),
         };
+        // If still empty, put everything in reflection
+        if(!parsed.reflection) parsed.reflection=rawTxt;
       }
 
       setAi(parsed);
@@ -263,11 +276,10 @@ Respond ONLY with this exact JSON, no other text:
       };
       const updated=[newSession,...sessions].slice(0,100);
       setSessions(updated);saveSessions(updated);setSaved(true);
-// Debug: show raw response
-if(!parsed.reflection){
-  parsed.reflection = rawTxt; // Show raw text so we can see what Gemini returns
-}
-setAi(parsed);
+    }catch(e){
+      console.error("Gemini error:",e);
+      setErr(t.error);
+    }
     setLoading(false);
   };
 
