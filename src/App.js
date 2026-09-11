@@ -265,7 +265,7 @@ Respond ONLY with this exact JSON, no other text:
       setSessions(updated);saveSessions(updated);setSaved(true);
     }catch(e){
       console.error("Gemini error:",e);
-      setErr(t.error);
+      setErr("Error: " + (e.message || JSON.stringify(e)));
     }
     setLoading(false);
   };
