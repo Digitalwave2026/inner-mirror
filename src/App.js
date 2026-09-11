@@ -34,13 +34,13 @@ const MOOD = {
 };
 
 const PATTERNS = {
-  burnout:    { ids:[1,8,14,15,6],  en:"Burnout / Depletion",          zh:"身心耗竭／倦怠"     },
-  anxiety:    { ids:[3,8,16,20,9],  en:"Anxiety / Overwhelm",          zh:"焦慮／不知所措"     },
-  lowmood:    { ids:[4,7,15,6,19],  en:"Low Mood / Withdrawal",        zh:"情緒低落／退縮"     },
-  anger:      { ids:[5,20,14,17],   en:"Suppressed Anger / Tension",   zh:"壓抑憤怒／內在張力" },
-  grief:      { ids:[4,18,19,7,2],  en:"Grief / Longing",              zh:"悲傷／失落渴望"     },
-  growth:     { ids:[10,12,21,22,11],en:"Growth / Wellbeing",          zh:"成長／正向狀態"     },
-  transition: { ids:[2,9,14,18,20], en:"Life Transition / Uncertainty",zh:"人生轉變／不確定感" },
+  burnout:    { ids:[1,8,14,15,6],   en:"Burnout / Depletion",          zh:"身心耗竭／倦怠"     },
+  anxiety:    { ids:[3,8,16,20,9],   en:"Anxiety / Overwhelm",          zh:"焦慮／不知所措"     },
+  lowmood:    { ids:[4,7,15,6,19],   en:"Low Mood / Withdrawal",        zh:"情緒低落／退縮"     },
+  anger:      { ids:[5,20,14,17],    en:"Suppressed Anger / Tension",   zh:"壓抑憤怒／內在張力" },
+  grief:      { ids:[4,18,19,7,2],   en:"Grief / Longing",              zh:"悲傷／失落渴望"     },
+  growth:     { ids:[10,12,21,22,11],en:"Growth / Wellbeing",           zh:"成長／正向狀態"     },
+  transition: { ids:[2,9,14,18,20],  en:"Life Transition / Uncertainty",zh:"人生轉變／不確定感" },
 };
 
 function detectPattern(cards){
@@ -65,7 +65,7 @@ const T={
     placeholder:"Write freely here… there is no judgement.",
     reflect:"Reflect on My Cards",skip:"Skip & Continue",back:"← Back",
     s3Title:"Your Reflection",thinking:"Reading your cards with care…",
-    sReflection:"Reflection",sInsight:"Insight",sSuggestions:"Self-care steps",
+    sReflection:"Reflection",sInsight:"Insight",
     sAwareness:"Gentle Awareness",sTechniques:"Evidence-based Techniques",sNote:"A gentle reminder",
     savedMsg:"✨ Session saved to your journey",viewJourney:"View My Journey",
     again:"Begin a New Session",error:"Unable to connect. Please try again.",
@@ -89,7 +89,7 @@ const T={
     placeholder:"在這裡自由書寫……這裡沒有評判。",
     reflect:"解讀我的牌",skip:"略過，繼續",back:"← 返回",
     s3Title:"你的領悟",thinking:"正在細讀你的牌……",
-    sReflection:"情感反思",sInsight:"心理洞察",sSuggestions:"自我關懷建議",
+    sReflection:"情感反思",sInsight:"心理洞察",
     sAwareness:"溫柔覺察",sTechniques:"實證自助技巧",sNote:"溫柔提醒",
     savedMsg:"✨ 本次體驗已儲存至旅程",viewJourney:"查看我的旅程",
     again:"開始新一輪",error:"無法連接，請稍後再試。",
@@ -112,11 +112,41 @@ function formatDate(iso,lang){const d=new Date(iso);if(lang==="zh")return `${d.g
 function getTopCards(sessions){const freq={};sessions.forEach(s=>s.cards.forEach(c=>{if(!freq[c.id])freq[c.id]={card:c,count:0};freq[c.id].count++;}));return Object.values(freq).sort((a,b)=>b.count-a.count).slice(0,5);}
 function getDaysActive(sessions){return new Set(sessions.map(s=>s.date.split("T")[0])).size;}
 
-function parseAI(text,isZh){
-  const get=(a,b)=>{const m=text.match(new RegExp(`\\[${a}\\]([\\s\\S]*?)(?=\\[${b}\\]|$)`));return m?m[1].trim():"";};
-  return isZh
-    ?{reflection:get("反思","洞察"),insight:get("洞察","覺察"),awareness:get("覺察","技巧"),techniques:get("技巧","提示"),note:text.split("[提示]")[1]?.trim()||""}
-    :{reflection:get("REFLECTION","INSIGHT"),insight:get("INSIGHT","AWARENESS"),awareness:get("AWARENESS","TECHNIQUES"),techniques:get("TECHNIQUES","NOTE"),note:text.split("[NOTE]")[1]?.trim()||""};
+// ── Robust parser that handles Gemini's varied formatting ──
+function parseAI(text, isZh){
+  // Strip markdown bold/headers that Gemini sometimes adds
+  const clean = text.replace(/\*\*/g,"").replace(/##/g,"").replace(/\n{3,}/g,"\n\n");
+
+  const extractSection = (tags, nextTags) => {
+    for(const tag of tags){
+      // Try bracket format: [TAG] or [TAG]:
+      const pattern = new RegExp(`\\[${tag}\\]:?\\s*([\\s\\S]*?)(?=${nextTags.map(t=>`\\[${t}\\]`).join("|")}|$)`, "i");
+      const m = clean.match(pattern);
+      if(m && m[1].trim()) return m[1].trim();
+      // Try plain format: TAG: or TAG\n
+      const pattern2 = new RegExp(`(?:^|\\n)${tag}:?\\s*\\n([\\s\\S]*?)(?=${nextTags.map(t=>`(?:^|\\n)${t}`).join("|")}|$)`, "im");
+      const m2 = clean.match(pattern2);
+      if(m2 && m2[1].trim()) return m2[1].trim();
+    }
+    return "";
+  };
+
+  if(isZh){
+    return {
+      reflection: extractSection(["反思"],["洞察","覺察","技巧","提示"]),
+      insight:    extractSection(["洞察"],["覺察","技巧","提示"]),
+      awareness:  extractSection(["覺察"],["技巧","提示"]),
+      techniques: extractSection(["技巧"],["提示"]),
+      note:       extractSection(["提示"],[]),
+    };
+  }
+  return {
+    reflection: extractSection(["REFLECTION"],["INSIGHT","AWARENESS","TECHNIQUES","NOTE"]),
+    insight:    extractSection(["INSIGHT"],["AWARENESS","TECHNIQUES","NOTE"]),
+    awareness:  extractSection(["AWARENESS"],["TECHNIQUES","NOTE"]),
+    techniques: extractSection(["TECHNIQUES"],["NOTE"]),
+    note:       extractSection(["NOTE"],[]),
+  };
 }
 
 const S={
@@ -201,32 +231,29 @@ export default function App(){
       ?isZh?PATTERNS[detectedPattern].zh:PATTERNS[detectedPattern].en:"";
 
     const prompt=isZh
-      ?`你是一位溫柔、富有同理心的心理健康伴侶，具備專業心理學知識。
-用戶選擇了：${names}。${patternHint?`這些牌可能反映：${patternHint}。`:""}${expr?`他們分享：「${expr}」`:""}
-請以繁體中文回應，嚴格按照以下格式：
-[反思] 以溫暖、非評判的方式承認感受（2-3句）
-[洞察] 輕柔說明這些情緒組合可能反映的心理狀態與模式（2-3句）
-[覺察] 以非診斷、溫柔的語言，說明這些感受有時與哪些心理狀況相關，並讓用戶知道這很常見（2-3句）
-[技巧] 3個具體的實證自助技巧，每項包含名稱與簡短說明，數字列出
-[提示] 如感受持續，溫柔建議尋求專業支持（1句）`
-      :`You are a warm, empathetic mental wellness companion with professional psychology knowledge.
-Cards chosen: ${names}. ${patternHint?`These may reflect: ${patternHint}.`:""} ${expr?`They shared: "${expr}"`:""}
-Respond in this EXACT format:
-[REFLECTION] Acknowledge feelings warmly and without judgement (2-3 sentences)
-[INSIGHT] Gently explain what this emotional combination might reflect psychologically (2-3 sentences)
-[AWARENESS] In gentle, non-diagnostic language, explain what these feelings are sometimes associated with. Normalise it (2-3 sentences)
-[TECHNIQUES] 3 specific evidence-based self-help techniques with name and brief how-to, numbered
-[NOTE] One warm sentence gently suggesting professional support if these feelings persist`;
+      ?`你是一位溫柔、富有同理心的心理健康伴侶。用戶選擇了：${names}。${patternHint?`情緒模式：${patternHint}。`:""}${expr?`他們分享：「${expr}」`:""}
+
+請只回傳一個JSON物件，不要有任何其他文字、不要有markdown格式、不要有\`\`\`符號。格式如下：
+{"reflection":"以溫暖非評判方式承認感受2-3句","insight":"輕柔說明情緒模式2-3句","awareness":"說明這些感受有時與哪些狀況相關讓用戶知道這很常見2-3句","techniques":"1. 技巧名稱：說明\n2. 技巧名稱：說明\n3. 技巧名稱：說明","note":"如感受持續溫柔建議尋求專業支持1句"}`
+      :`You are a warm, empathetic mental wellness companion. Cards chosen: ${names}. ${patternHint?`Emotional pattern: ${patternHint}.`:""} ${expr?`They shared: "${expr}"`:""}
+
+Return ONLY a valid JSON object with no extra text, no markdown, no backticks:
+{"reflection":"Acknowledge feelings warmly 2-3 sentences","insight":"Gently explain psychological patterns 2-3 sentences","awareness":"Explain what these feelings are sometimes associated with, normalise it 2-3 sentences","techniques":"1. Technique name: how-to\n2. Technique name: how-to\n3. Technique name: how-to","note":"One warm sentence suggesting professional support if needed"}`;
 
     try{
       const geminiKey=process.env.REACT_APP_GEMINI_KEY;
       const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,{
         method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1400}})
+        body:JSON.stringify({
+          contents:[{parts:[{text:prompt}]}],
+          generationConfig:{maxOutputTokens:1400,temperature:0.7,responseMimeType:"application/json"}
+        })
       });
       const d=await res.json();
-      const txt=d.candidates?.[0]?.content?.parts?.[0]?.text||"";
-      const parsed=parseAI(txt,isZh);
+      const txt=d.candidates?.[0]?.content?.parts?.[0]?.text||"{}";
+      // Clean any stray markdown backticks Gemini might add
+      const cleaned=txt.replace(/```json|```/g,"").trim();
+      const parsed=JSON.parse(cleaned);
       setAi(parsed);
       const newSession={
         id:Date.now().toString(),date:new Date().toISOString(),
@@ -236,7 +263,7 @@ Respond in this EXACT format:
       };
       const updated=[newSession,...sessions].slice(0,100);
       setSessions(updated);saveSessions(updated);setSaved(true);
-    }catch{setErr(t.error);}
+    }catch(e){setErr(t.error);}
     setLoading(false);
   };
 
